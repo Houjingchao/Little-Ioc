@@ -2,6 +2,7 @@ package com.littlem.ioc;
 
 import com.littlem.ioc.util.ReflectUtil;
 
+import java.lang.reflect.Field;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -110,11 +111,15 @@ public class Container implements ContainerInf {
 
     /**
      * 注入对象
+     * 所有字段
      */
     public void inject(Object object) {
 
         try {
-
+            Field[] fields = object.getClass().getDeclaredFields();
+            for(Field field:fields){
+                Autp
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
