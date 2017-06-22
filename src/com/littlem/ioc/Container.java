@@ -1,5 +1,6 @@
 package com.littlem.ioc;
 
+import com.littlem.ioc.annotation.Autowired;
 import com.littlem.ioc.util.ReflectUtil;
 
 import java.lang.reflect.Field;
@@ -117,12 +118,50 @@ public class Container implements ContainerInf {
 
         try {
             Field[] fields = object.getClass().getDeclaredFields();
-            for(Field field:fields){
-                Autp
+            for (Field field : fields) {
+                Autowired autowired = field.getAnnotation(Autowired.class);
+                if (null != autowired) {
+                    Object autoWiredField = null;
+                    String name = autowired.name();
+                    if (!name.equals("")) {//当不空的时候
+                        String className = beanKeys.get(name);
+                        if (null != className && !className.equals("")) {
+                            autoWiredField = beans.get(className);
+                        }
+
+                        if (null == autoWiredField) {
+                            throw new RuntimeException("load failed:" + name);
+                        }
+                    } else {
+                        if (autowired.value() == Class.class) {
+                            autoWiredField = recursiveAssembly(field.getType());
+                        } else {
+                            autoWiredField = this.getBean(autowired.value());
+                            if (null == autoWiredField) {
+                                autoWiredField = recursiveAssembly(autowired.value());
+                            }
+                        }
+                    }
+                    if (null == autoWiredField) {
+                        throw new RuntimeException("Unable to load " + field.getType().getCanonicalName());
+                    }
+                    boolean accessible = field.isAccessible();
+                    field.setAccessible(true);
+                    field.set(object, autoWiredField);
+                    field.setAccessible(accessible);
+                }
+
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    private Object recursiveAssembly(Class<?> clazz) {
+        if (null != clazz) {
+            return this.registerBean(clazz);
+        }
+        return null;
     }
 
 }
